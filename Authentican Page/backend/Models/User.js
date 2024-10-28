@@ -15,6 +15,19 @@ const UserSchema = new Schema({
         type: String,
         required: true,
         unique: true
+    },
+    State : {
+        type : String,
+        required : true,
+    },
+    District : {
+        type : String,
+        required : true,
+    },
+    pincode : {
+        type : String,
+        required : true,
+        unique : true
     }
 });
 
