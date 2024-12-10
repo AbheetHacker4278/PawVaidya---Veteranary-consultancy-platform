@@ -8,7 +8,7 @@ import axios from 'axios';
 
 const Appointments = () => {
   const { docId } = useParams();
-  const { doctors, backendurl, token, getdoctorsdata } = useContext(AppContext)
+  const { doctors, backendurl, token, getdoctorsdata , userdata} = useContext(AppContext)
   const daysofWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const navigate = useNavigate()
@@ -88,6 +88,10 @@ const Appointments = () => {
     if (!token) {
       toast.warn('Login to Book Appointment')
       return navigate('/login')
+    }
+    if(!userdata.isAccountverified){
+      toast.warn('Please Verify Your Account')
+      return navigate('/')
     }
     try {
       const date = docSlots[slotIndex][0].datetime
