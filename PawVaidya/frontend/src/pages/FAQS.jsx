@@ -1,11 +1,10 @@
 import React from 'react'
-import UnderDevPage from '../components/UnderDevPage'
+import FaqSection from '../components/FaqSection'
 
 const FAQS = () => {
   return (
-    <div>
-      Faqs
-      <UnderDevPage />
+    <div className="min-h-screen">
+      <FaqSection />
     </div>
   )
 }
