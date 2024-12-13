@@ -27,8 +27,10 @@ const LoginForm = () => {
     const { email, password } = formData;
   
     try {
+      axios.defaults.withCredentials = true;
       const { data } = await axios.post(`${backendurl}/api/user/login`, { email, password });
       if (data.success) {
+        setisLoggedin(true)
         localStorage.setItem('token', data.token);
         settoken(data.token);
         toast.success("Login successful!");

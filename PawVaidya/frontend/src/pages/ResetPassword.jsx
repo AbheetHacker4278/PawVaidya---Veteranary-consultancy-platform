@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 
 const ResetPassword = () => {
   const {backendurl} = useContext(AppContext)
+  axios.defaults.withCredentials = true
   const token = localStorage.getItem('token')
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -45,18 +46,20 @@ const ResetPassword = () => {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    console.log(`${backendurl}/api/user/send-reset-otp`);
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return toast.error("Please enter a valid email address.");
+    }
     try {
-      const { data } = await axios.post(
-        `${backendurl}/api/user/send-reset-otp`, 
-        { email },
-        { headers: { token } }
-      );
-      data.success ? toast.success(data.message) : toast.error(data.message);
-      data.success && setIsEmailSent(true);
+      const { data } = await axios.post(backendurl + '/api/user/send-reset-otp', { email });
+      if (data.success) {
+        toast.success(data.message);
+        setIsEmailSent(true);
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+      console.error("Error:", error.response || error.message);
+      toast.error(error.response?.data?.message || error.message);
     }
   };
   
@@ -72,7 +75,7 @@ const ResetPassword = () => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(backendurl + '/api/user/reset-password' , {email , otp , password} , { headers: { token } })
+      const { data } = await axios.post(backendurl + '/api/user/reset-password' , {email , otp , password})
       data.success ? toast.success(data.message) : toast.error(data.message)
       data.success && navigate('/login-form')
     } catch (error) {

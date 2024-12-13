@@ -35,14 +35,14 @@ const Dashboard = () => {
           </div>
         </div>
         <div className='flex items-center gap-2 bg-green-50 p-4 min-w-52 rounded border-2 border-gray-100 cursor-pointer hover:scale-105 transition-all'>
-          <img className='w-12' src="https://cdn-icons-png.flaticon.com/512/4685/4685242.png" alt="" />
+          <img className='w-12' src="https://e7.pngegg.com/pngimages/914/745/png-clipart-cross-on-a-red-circle-red-cross-on-red-fork-thumbnail.png" alt="" />
           <div>
             <p className='text-md font-semibold text-gray-500'>{dashdata.canceledAppointmentCount}</p>
             <p className='text-gray-400'>Cancelled Appointment</p>
           </div>
         </div>
         <div className='flex items-center gap-2 bg-green-50 p-4 min-w-52 rounded border-2 border-gray-100 cursor-pointer hover:scale-105 transition-all'>
-          <img className='w-12' src="https://e7.pngegg.com/pngimages/914/745/png-clipart-cross-on-a-red-circle-red-cross-on-red-fork-thumbnail.png" alt="" />
+          <img className='w-12' src="https://cdn-icons-png.flaticon.com/512/4685/4685242.png" alt="" />
           <div>
             <p className='text-md font-semibold text-gray-500'>{dashdata.completedAppointmentCount}</p>
             <p className='text-gray-400'>Completed Appointment</p>

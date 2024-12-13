@@ -6,7 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const Login = () => {
-  const { backendurl, token, settoken } = useContext(AppContext);
+  const { backendurl, token, settoken , setisLoggedin} = useContext(AppContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -39,6 +39,7 @@ const Login = () => {
     }
 
     try {
+      axios.defaults.withCredentials = true;
       const { data } = await axios.post(backendurl + '/api/user/register', {
         name,
         password,
@@ -47,6 +48,7 @@ const Login = () => {
         district,
       });
       if (data.success) {
+        setisLoggedin(true)
         localStorage.setItem('token', data.token);
         settoken(data.token);
         toast.success("Registration successful!");

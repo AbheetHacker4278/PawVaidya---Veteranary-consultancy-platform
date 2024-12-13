@@ -10,6 +10,21 @@ const Navbar = () => {
   const {token , settoken , userdata , backendurl , setuserdata , setisLoggedin} = useContext(AppContext)
   const [showMenu , setShowMenu] = useState(false)
 
+
+  const Logout = async() => {
+    try {
+        axios.defaults.withCredentials = true
+        const {data} = await axios.post(backendurl + '/api/user/logout' , {headers : token})
+        data.success && setisLoggedin(false)
+        data.success && setuserdata(false)
+        data.success && settoken(false)
+        data.success && localStorage.removeItem('token')
+        navigate('/')
+    } catch (error) {
+      toast.error(error.message);
+    }
+}
+
   const sendVerificationOtp = async () => {
     try {
         const { data } = await axios.post(
@@ -31,10 +46,6 @@ const Navbar = () => {
     }
 };
 
-  const logout = () => {
-      settoken(false)
-      // localStorage.removeItem('token')
-  }
   return (
     <div className='flex items-center justify-between text-sm py-4 mb-5 border-b border-b-green-400'>
         <img onClick={()=>navigate('/')} className="w-44 cursor-pointer" src="https://i.ibb.co/R2Y4vBk/Screenshot-2024-11-23-000108-removebg-preview.png" alt='' />
@@ -84,7 +95,7 @@ const Navbar = () => {
                   My Appointments
                 </p>
                 <p
-                  onClick={logout}
+                  onClick={Logout}
                   className="hover:text-emerald-400 cursor-pointer"
                 >
                   Logout

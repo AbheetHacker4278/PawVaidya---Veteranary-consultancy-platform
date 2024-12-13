@@ -17,7 +17,7 @@ const PrivacyPolicy = () => {
             <HelpCircle className="h-12 w-12 text-green-600" />
           </div>
           <h1 className="text-4xl font-bold text-gray-600 mb-4">
-            Privacy Policy
+            Privacy Policy 🦥
           </h1>
           <p className="text-lg text-gray-600">
             Find answers to common questions about our services

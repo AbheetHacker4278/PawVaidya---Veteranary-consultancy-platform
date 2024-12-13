@@ -16,8 +16,9 @@ connectCloudnairy() //
 
 
 //middleware
+const allowedorigins = ['http://localhost:5173' , "*"]
 app.use(express.json())
-app.use(cors({ origin: "*" , credentials: true}));
+app.use(cors({ origin: allowedorigins , credentials: true}));
 app.use(cookieParser())
 
 //api endpoint
