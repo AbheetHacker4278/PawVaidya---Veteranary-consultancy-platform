@@ -16,7 +16,7 @@ connectCloudnairy() //
 
 
 //middleware
-const allowedorigins = ['http://localhost:5173' , "*"]
+const allowedorigins = ['http://localhost:5173' , "*" , 'http://localhost:5174']
 app.use(express.json())
 app.use(cors({ origin: allowedorigins , credentials: true}));
 app.use(cookieParser())
@@ -25,7 +25,7 @@ app.use(cookieParser())
 try {
     app.use('/api/admin', adminRouter);
   } catch (error) {
-    console.error("Failed to use adminRouter:", error.message);
+    console.error("failed to use adminRouter:", error.message);
 }
 try {
     app.use('/api/doctor', doctorrouter);
