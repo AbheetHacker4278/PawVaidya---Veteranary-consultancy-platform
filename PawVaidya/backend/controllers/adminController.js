@@ -17,7 +17,7 @@ export const addDoctor = async (req, res) => {
         if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address || !full_address) {
             return res.json({
                 success: false,
-                message: "Missing required fields",
+                message: "Missing required Fields",
             });
         }
 
@@ -134,6 +134,17 @@ export const allDoctors = async (req , res) => {
         });
     }
 }  
+export const allUsers = async (req , res) => {
+    try {
+        const users = await userModel.find({}).select('-password -resetOtpExpireAt -verifyOtpExpiredAt -verifyOtpVerified -verifyOtp -resetOtp');
+        res.json({success: true , users})
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+}  
 
 // API to get dashboard data for admin panel
 export const appointmenetsAdmin = async (req, res) => {
@@ -182,15 +193,15 @@ export const admindashboard = async (req, res) => {
     try {
         // Fetch counts directly
         const doctorsCount = await doctorModel.countDocuments({});
-        const usersCount = await userModel.countDocuments({  });
+        const usersCount = await userModel.countDocuments({});
         const appointmentsCount = await appointmentModel.countDocuments({});
-        const canceledAppointmentCount = await appointmentModel.countDocuments({ cancelled: true }); // Assuming `status` tracks cancellation
-        const completedAppointmentCount = await appointmentModel.countDocuments({ isCompleted: true }); // Assuming `isCompleted` is a boolean
+        const canceledAppointmentCount = await appointmentModel.countDocuments({ cancelled: true });
+        const completedAppointmentCount = await appointmentModel.countDocuments({ isCompleted: true });
 
         // Fetch latest 5 appointments
         const latestAppointments = await appointmentModel
             .find({})
-            .sort({ createdAt: -1 }) // Assuming `createdAt` field exists
+            .sort({ createdAt: -1 })
             .limit(5);
 
         // Fetch latest 5 cancelled appointments
@@ -205,6 +216,40 @@ export const admindashboard = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(5);
 
+        // Aggregate appointments per user
+        const userAppointments = await appointmentModel.aggregate([
+            {
+                $group: {
+                    _id: "$userId", // Group by user ID
+                    totalAppointments: { $sum: 1 }, // Count appointments
+                },
+            },
+            {
+                $addFields: {
+                    userObjectId: { $toObjectId: "$_id" }, // Convert userId to ObjectId
+                },
+            },
+            {
+                $lookup: {
+                    from: "users", // Name of the users collection
+                    localField: "userObjectId", // Match converted ObjectId to `_id` in users
+                    foreignField: "_id",
+                    as: "userInfo",
+                },
+            },
+            {
+                $unwind: "$userInfo", // Flatten the userInfo array
+            },
+            {
+                $project: {
+                    userId: "$userInfo._id",
+                    name: "$userInfo.name",
+                    email: "$userInfo.email",
+                    totalAppointments: 1,
+                },
+            },
+        ]);
+
         // Prepare dashboard data
         const dashdata = {
             doctors: doctorsCount,
@@ -215,6 +260,7 @@ export const admindashboard = async (req, res) => {
             latestAppointments,
             cancelledAppointments,
             completedAppointments,
+            userAppointments, // Include the user appointment stats
         };
 
         res.json({ success: true, dashdata });
@@ -223,4 +269,5 @@ export const admindashboard = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error. Please try again later." });
     }
 };
+
 

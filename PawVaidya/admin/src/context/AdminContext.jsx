@@ -8,6 +8,7 @@ const AdminContextProvider = (props) => {
 
     const [atoken , setatoken] = useState(localStorage.getItem('atoken') ? localStorage.getItem('atoken') : '')
     const [doctors , setdoctors] = useState([])
+    const [users , setusers] = useState([])
     const [appointments , setappointments] = useState([])
     const [dashdata , setdashdata] = useState(false)
 
@@ -19,6 +20,19 @@ const AdminContextProvider = (props) => {
             if(data.success){
                 setdoctors(data.doctors)
                 console.log(data.doctors)
+            }else{
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+    const getallusers = async () => {
+        try {
+            const {data} = await axios.get(backendurl + '/api/admin/all-users' , {headers:{atoken}})
+            if(data.success){
+                setusers(data.users)
+                console.log(data.users)
             }else{
                 toast.error(data.message)
             }
@@ -98,7 +112,8 @@ const AdminContextProvider = (props) => {
         getalldoctors,changeavailablity,
         appointments,setappointments,
         getallappointments,cancelappointment,
-        dashdata , getdashdata
+        dashdata , getdashdata , getallusers , setusers,
+        users
     }
 
     return (
