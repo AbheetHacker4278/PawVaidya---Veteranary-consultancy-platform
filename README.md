@@ -1,6 +1,9 @@
 
 ## Steps to make pull requests and to run the website:
 
+### Note : Always sync your fork from time to time to stay updated and ensure you are working with the latest udpates and releases.
+
+
 ### Running the website
 1. Firstly fork the project repo.
 2. Now go to your forked repo which will be in your account repos.
