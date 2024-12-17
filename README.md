@@ -4,7 +4,7 @@
 ### Running the website
 1. Firstly fork the project repo.
 2. Now go to your forked repo which will be in your account repos.
-3. Clone the repo into your machine using command  `git clone https://github.com/EpicsProject10/PawVaidya---Veteranary-consultancy-platform.git`
+3. Clone the repo into your machine using command  `git clone 'url of you forked repo'`
 4. If you don't have Nodejs or NPM installed on your computer. Install the same.
 5. Now go to the folder where you have cloned the repo.
 6. Open terminals for all the three subfolders i.e. Admin, frontend and Backend.
