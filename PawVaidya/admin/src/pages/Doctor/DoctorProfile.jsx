@@ -1,37 +1,64 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { DoctorContext } from '../../context/DoctorContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { Camera, MapPin, Phone, Clock, CreditCard, Edit2, Save } from 'lucide-react';
 
 const DoctorProfile = () => {
     const { dtoken, profileData, setProfileData, getProfileData, backendurl } = useContext(DoctorContext);
     const [isEdit, setIsEdit] = useState(false);
+    const fileInputRef = useRef(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setProfileData((prev) => ({
+                    ...prev,
+                    tempImage: e.target.result,
+                }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const updateProfile = async () => {
         try {
-            const updateData = {
-                address: profileData.address,
-                fees: profileData.fees,
-                about: profileData.about,
-                available: profileData.available,
-                full_address: profileData.full_address,
-                experience: profileData.experience,
-                docphone: profileData.docphone
-            };
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('docId', profileData._id);
+            formData.append('fees', profileData.fees);
+            formData.append('address', JSON.stringify(profileData.address));
+            formData.append('available', profileData.available);
+            formData.append('about', profileData.about);
+            formData.append('full_address', profileData.full_address);
+            formData.append('experience', profileData.experience);
+            formData.append('docphone', profileData.docphone);
 
-            const { data } = await axios.post(backendurl + '/api/doctor/update-profile', updateData, {
-                headers: { dtoken },
-            });
+            if (selectedImage) {
+                formData.append('image', selectedImage);
+            }
+
+            const { data } = await axios.post(
+                `${backendurl}/api/doctor/update-profile`,
+                formData,
+                { headers: { dtoken } }
+            );
 
             if (data.success) {
-                toast.success(data.message);
+                toast.success('Profile updated successfully');
                 setIsEdit(false);
+                setSelectedImage(null);
                 getProfileData();
-            } else {
-                toast.error(data.message);
             }
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error.response?.data?.message || 'Failed to update profile');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -41,183 +68,196 @@ const DoctorProfile = () => {
         }
     }, [dtoken]);
 
+    if (!profileData) return null;
+
     return (
-        profileData && (
-            <div className="bg-gray-50 min-h-screen p-6 ">
-                <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
-                    {/* Profile Header */}
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                        <img
-                            className="w-32 h-32 rounded-full object-cover shadow-md border-4 border-primary"
-                            src={profileData.image}
-                            alt="Doctor"
-                        />
-                        <div>
-                            <h2 className="text-3xl font-semibold text-gray-700">{profileData.name}</h2>
-                            <p className="text-gray-500 mt-2">{profileData.degree} - {profileData.speciality}</p>
-                            <span className="bg-primary text-zinc-600 text-xs px-2 py-1 rounded-full mt-1 inline-block border bg-green-200">
-                                {profileData.experience}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap justify-end relative bottom-36">
-                        {/* Show bell notification only if phone number is missing */}
-                        {!profileData.docphone && (
-                            <div className="relative bg-teal-100 p-2 rounded-lg group cursor-pointer">
-                                <svg
-                                    className="w-8 h-8 text-green-600 animate-wiggle"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 21 21"
-                                >
-                                    <path
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M15.585 15.5H5.415A1.65 1.65 0 0 1 4 13a10.526 10.526 0 0 0 1.5-5.415V6.5a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v1.085c0 1.907.518 3.78 1.5 5.415a1.65 1.65 0 0 1-1.415 2.5zm1.915-11c-.267-.934-.6-1.6-1-2s-1.066-.733-2-1m-10.912 3c.209-.934.512-1.6.912-2s1.096-.733 2.088-1M13 17c-.667 1-1.5 1.5-2.5 1.5S8.667 18 8 17"
-                                    />
-                                </svg>
-                                <div className="hidden group-hover:block px-1 py-0.5 bg-teal-100 text-zinc-700 min-w-5 rounded-full text-center text-xs absolute -top-2 -end-28 translate-x-1/4 text-nowrap">
-                                    <div className="absolute top-0 start-0 rounded-full -z-10 animate-ping bg-teal-200 w-auto h-full"></div>
-                                    Please add your phone number
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-
-
-                    {/* Profile Details */}
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* About Section */}
-                        <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
-                            <h3 className="text-xl font-medium text-gray-700 mb-2">About</h3>
-                            {isEdit ? (
-                                <textarea
-                                    onChange={(e) => setProfileData((prev) => ({ ...prev, about: e.target.value }))}
-                                    className="w-full border border-gray-300 rounded-lg p-2"
-                                    rows={6}
-                                    value={profileData.about}
+        <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
+            <div className="max-w-5xl mx-auto space-y-6">
+                {/* Header Card */}
+                <div className="bg-white rounded-xl shadow-sm overflow-visible p-6">
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                        {/* Profile Image */}
+                        <div className="relative group">
+                            <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-green-100">
+                                <img
+                                    className="w-full h-full object-cover"
+                                    src={profileData.tempImage || profileData.image}
+                                    alt={profileData.name}
                                 />
-                            ) : (
-                                <p className="text-gray-600">{profileData.about}</p>
+                            </div>
+                            {isEdit && (
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Camera className="w-6 h-6 text-white" />
+                                </button>
                             )}
-                        </div>
-
-                        {/* Appointment Fee & Address */}
-                        <div className="p-4 bg-gray-100 rounded-lg shadow-sm">
-                            <h3 className="text-xl font-medium text-gray-700 mb-2">Details</h3>
-                            <p className="text-gray-600">
-                                <strong>Fee: </strong>
-                                ₹{isEdit ? (
-                                    <input
-                                        type="number"
-                                        onChange={(e) => setProfileData((prev) => ({ ...prev, fees: e.target.value }))}
-                                        className="w-24 border border-gray-300 rounded-lg px-2"
-                                        value={profileData.fees}
-                                    />
-                                ) : (
-                                    profileData.fees
-                                )}
-                            </p>
-                            <p className="text-gray-600 mt-2">
-                                <strong>Address: </strong>
-                                {isEdit ? (
-                                    <div className="flex flex-col gap-1">
-                                        <input
-                                            type="text"
-                                            onChange={(e) =>
-                                                setProfileData((prev) => ({
-                                                    ...prev,
-                                                    address: { ...prev.address, Location: e.target.value },
-                                                }))
-                                            }
-                                            className="border border-gray-300 rounded-lg px-2"
-                                            value={profileData.address.Location}
-                                        />
-                                        <input
-                                            type="text"
-                                            onChange={(e) =>
-                                                setProfileData((prev) => ({
-                                                    ...prev,
-                                                    address: { ...prev.address, line: e.target.value },
-                                                }))
-                                            }
-                                            className="border border-gray-300 rounded-lg px-2"
-                                            value={profileData.address.line}
-                                        />
-                                    </div>
-                                ) : (
-                                    <>
-                                        {profileData.address.Location}, {profileData.address.line}
-                                    </>
-                                )}
-                            </p>
-                            <p className="text-gray-600 pt-2">
-                                <strong> Phone: +91 </strong>
-                                {isEdit ? (
-                                    <input
-                                        type="number"
-                                        onChange={(e) => setProfileData((prev) => ({ ...prev, docphone: e.target.value }))}
-                                        className="w-24 border border-gray-300 rounded-lg px-2 "
-                                        value={profileData.docphone}
-                                    />
-                                ) : (
-                                    profileData.docphone
-                                )}
-                            </p>
-                        </div>
-                    </div>
-                    {/* Full Address Section */}
-                    <div className="p-4 bg-gray-100 rounded-lg shadow-sm mt-8">
-                        <h3 className="text-xl font-medium text-gray-700 mb-2">Full Address</h3>
-                        {isEdit ? (
-                            <textarea
-                                onChange={(e) => setProfileData((prev) => ({ ...prev, full_address: e.target.value }))}
-                                className="w-full border border-gray-300 rounded-lg p-2"
-                                rows={6}
-                                value={profileData.full_address}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleImageChange}
                             />
-                        ) : (
-                            <p className="text-gray-600">{profileData.full_address}</p>
-                        )}
+                        </div>
+
+                        {/* Basic Info */}
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold text-gray-900">{profileData.name}</h1>
+                            <p className="text-gray-500 mt-1">{profileData.degree} · {profileData.speciality}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                                <span className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    {profileData.experience}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Action Button */}
+                        <button
+                            onClick={() => isEdit ? updateProfile() : setIsEdit(true)}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                            {isEdit ? (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Save Changes
+                                </>
+                            ) : (
+                                <>
+                                    <Edit2 className="w-4 h-4" />
+                                    Edit Profile
+                                </>
+                            )}
+                        </button>
                     </div>
 
-                    {/* Availability */}
-                    <div className="mt-6 flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={profileData.available}
-                            onChange={() =>
-                                isEdit && setProfileData((prev) => ({ ...prev, available: !prev.available }))
-                            }
-                            className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
-                        />
-                        <label className="text-gray-700">Available for Appointments</label>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="mt-6 flex gap-4">
-                        {isEdit ? (
-                            <button
-                                onClick={updateProfile}
-                                className="bg-primary text-zinc-800 px-6 py-2 rounded-lg shadow hover:bg-primary-dark"
-                            >
-                                Save
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => setIsEdit((prev) => !prev)}
-                                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg shadow hover:bg-gray-300"
-                            >
-                                Edit
-                            </button>
-                        )}
+                    {/* Availability Toggle */}
+                    <div className="mt-6 flex items-center gap-3">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={profileData.available}
+                                onChange={() => isEdit && setProfileData(prev => ({ ...prev, available: !prev.available }))}
+                                disabled={!isEdit}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                        </label>
+                        <span className="text-sm text-gray-600">Available for Appointments</span>
                     </div>
                 </div>
+
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* About Section */}
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">About</h2>
+                        {isEdit ? (
+                            <textarea
+                                className="w-full min-h-[200px] p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
+                                value={profileData.about}
+                                onChange={(e) => setProfileData(prev => ({ ...prev, about: e.target.value }))}
+                            />
+                        ) : (
+                            <p className="text-gray-600 whitespace-pre-wrap">{profileData.about}</p>
+                        )}
+                    </div>
+
+                    {/* Contact & Details */}
+                    <div className="bg-white rounded-xl shadow-sm p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact & Details</h2>
+                        
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <CreditCard className="w-5 h-5 text-gray-400" />
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-600">Consultation Fee:</span>
+                                    {isEdit ? (
+                                        <input
+                                            type="number"
+                                            className="w-24 p-1 rounded border border-gray-200"
+                                            value={profileData.fees}
+                                            onChange={(e) => setProfileData(prev => ({ ...prev, fees: e.target.value }))}
+                                        />
+                                    ) : (
+                                        <span className="font-medium">₹{profileData.fees}</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <Phone className="w-5 h-5 text-gray-400" />
+                                <div className="flex items-center gap-2">
+                                    <span className="text-gray-600">Phone:</span>
+                                    {isEdit ? (
+                                        <input
+                                            type="tel"
+                                            className="w-32 p-1 rounded border border-gray-200"
+                                            value={profileData.docphone}
+                                            onChange={(e) => setProfileData(prev => ({ ...prev, docphone: e.target.value }))}
+                                        />
+                                    ) : (
+                                        <span className="font-medium">+91 {profileData.docphone}</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-3">
+                                <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+                                <div className="flex-1">
+                                    <span className="text-gray-600">Address:</span>
+                                    {isEdit ? (
+                                        <div className="space-y-2 mt-2">
+                                            <input
+                                                type="text"
+                                                className="w-full p-2 rounded border border-gray-200"
+                                                value={profileData.address.Location}
+                                                onChange={(e) => setProfileData(prev => ({
+                                                    ...prev,
+                                                    address: { ...prev.address, Location: e.target.value }
+                                                }))}
+                                                placeholder="Location"
+                                            />
+                                            <input
+                                                type="text"
+                                                className="w-full p-2 rounded border border-gray-200"
+                                                value={profileData.address.line}
+                                                onChange={(e) => setProfileData(prev => ({
+                                                    ...prev,
+                                                    address: { ...prev.address, line: e.target.value }
+                                                }))}
+                                                placeholder="Street Address"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <p className="font-medium mt-1">
+                                            {profileData.address.Location}, {profileData.address.line}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Full Address */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Complete Address</h2>
+                    {isEdit ? (
+                        <textarea
+                            className="w-full p-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
+                            rows={4}
+                            value={profileData.full_address}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, full_address: e.target.value }))}
+                        />
+                    ) : (
+                        <p className="text-gray-600 whitespace-pre-wrap">{profileData.full_address}</p>
+                    )}
+                </div>
             </div>
-        )
+        </div>
     );
 };
 

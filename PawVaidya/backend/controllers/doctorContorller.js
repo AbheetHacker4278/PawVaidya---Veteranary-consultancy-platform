@@ -1,6 +1,7 @@
 import doctorModel from "../models/doctorModel.js"
 import argon2 from 'argon2'
 import jwt from 'jsonwebtoken'
+import { v2 as coludinary} from 'cloudinary';
 import appointmentModel from "../models/appointmentModel.js"
 export const changeavailablity = async (req , res) => {
     try {
@@ -192,19 +193,58 @@ export const doctorProfile = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
 export const updateDoctorProfile = async (req, res) => {
     try {
+        const { docId, fees, address, available, about, full_address, experience, docphone } = req.body;
+        const imagefile = req.file; // Handled by multer middleware
 
-        const { docId, fees, address, available , about , full_address , experience , docphone} = req.body
+        // Parse address if it's a string
+        let parsedAddress = address;
+        if (typeof address === 'string') {
+            try {
+                parsedAddress = JSON.parse(address);
+            } catch (parseError) {
+                console.error('Failed to parse address:', parseError.message);
+                return res.status(400).json({ success: false, message: 'Invalid address format' });
+            }
+        }
 
-        await doctorModel.findByIdAndUpdate(docId, { fees, address, available , about , full_address , experience , docphone})
+        // Update doctor profile details
+        await doctorModel.findByIdAndUpdate(docId, {
+            fees,
+            address: parsedAddress,
+            available,
+            about,
+            full_address,
+            experience,
+            docphone,
+        });
 
-        res.json({ success: true, message: 'Profile Updated' })
+        // Handle image upload if imagefile exists
+        if (imagefile) {
+            const imageupload = await coludinary.uploader.upload(imagefile.path, {
+                resource_type: 'image',
+            });
+            const imageurl = imageupload.secure_url;
+
+            await doctorModel.findByIdAndUpdate(docId, { image: imageurl });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+        });
 
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.error('Error updating profile:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update profile',
+            error: error.message,
+        });
     }
-}
+};
+
 
 export default changeavailablity
