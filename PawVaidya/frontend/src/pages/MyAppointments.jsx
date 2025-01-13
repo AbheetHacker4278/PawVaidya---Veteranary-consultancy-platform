@@ -72,7 +72,7 @@ const MyAppointments = () => {
               <p className='text-neutral-800 font-semibold'>{item.docData.name}</p>
               <p>{item.docData.speciality}</p>
               <div className='flex flex-row'>
-              <p className='text-zinc-700 font-medium mt-1'>Full Address:  <span className='text-zinc-500 text-sm'>{item.docData.full_address}</span></p>
+                <p className='text-zinc-700 font-medium mt-1'>Full Address:  <span className='text-zinc-500 text-sm'>{item.docData.full_address}</span></p>
               </div>
               <p className='text-sm mt-1'><span className='text-sm text-neutral-700 font-medium'>Date & Time:</span>{slotDateFormat(item.slotDate)} | {item.slotTime}</p>
               <p className='text-sm mt-1'><span className='text-sm text-neutral-700 font-medium'>Phone Number:</span> +91 {item.docData.docphone}</p>
@@ -103,11 +103,29 @@ const MyAppointments = () => {
                     Cancel Appointment
                   </button>
                   <button
-                    onClick={() => navigate('/quick-chats')}
-                    className="text-sm text-stone-500 text-center sm:min-w-48 py-2 border border-emerald-400 rounded hover:bg-green-400 hover:text-white transition-all duration-300"
+                    onClick={() => {
+                      let whatsappNumber = item.docData.docphone.replace(/\s+/g, '');
+                      if (!whatsappNumber.startsWith('+91')) {
+                        whatsappNumber = `+91${whatsappNumber}`;
+                      }
+
+                      const whatsappURL = `https://wa.me/${whatsappNumber}?text=Hi%20Doctor%20${item.docData.name},%20I%20would%20like%20to%20confirm%20my%20appointment.%0A%0AHere%20are%20the%20details:%0A-%20Appointment%20ID:%20${item._id}%0A-%20Date:%20${slotDateFormat(item.slotDate)}%0A-%20Time:%20${item.slotTime}%0A-%20Pet%20Name:%20${item.userData.breed}%0A-%20Email:%20${item.userData.email}%0A-%20Phone:%20+91%20${item.docData.docphone}%0A-%20Amount:%20${item.amount}`;
+
+                      window.open(whatsappURL, '_blank');
+                    }}
+                    className="flex items-center gap-2 text-sm text-stone-500 text-center sm:min-w-48 py-2 border border-emerald-400 rounded hover:bg-green-400 hover:text-white transition-all duration-300"
                   >
-                    Quick Chat
+                    <div className="flex justify-center items-center text-center gap-2 pl-36  md:flex md:justify-center md:items-center md:text-center md:gap-2 md:pl-14 ">
+                      <span>Quick Chat</span>
+                      <img
+                        className="w-5 h-5"
+                        src="https://img.icons8.com/?size=100&id=uZWiLUyryScN&format=png&color=000000"
+                        alt="WhatsApp icon"
+                      />
+                    </div>
+
                   </button>
+
                 </>
               )}
             </div>
